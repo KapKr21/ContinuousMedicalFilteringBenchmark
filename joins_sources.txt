@@ -1,0 +1,14 @@
+joins/src/scalabilityAnalysis/DefaultTopKSchemaAgnosticJoin.java
+joins/src/scalabilityAnalysis/TopKSchemaAgnosticJoin.java
+joins/src/scalabilityAnalysis/SchemaAgnosticEJoin.java
+joins/src/utilities/Pair.java
+joins/src/utilities/SimilarityFunction.java
+joins/src/utilities/Tokenizer.java
+joins/src/utilities/RepresentationModel.java
+joins/src/joins/DefaultTopKSchemaAgnosticJoin.java
+joins/src/joins/AbstractJoin.java
+joins/src/joins/DefaultTopKSchemaBasedJoin.java
+joins/src/joins/TopKSchemaAgnosticJoin.java
+joins/src/joins/SchemaBasedEJoin.java
+joins/src/joins/TopKSchemaBasedJoin.java
+joins/src/joins/SchemaAgnosticEJoin.java

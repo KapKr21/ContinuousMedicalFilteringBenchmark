@@ -1,103 +1,112 @@
-# Continuous Benchmark of Filtering methods for Entity Resolution
+# Filtering Techniques for Entity Resolution in Medical Data
 
-**Entity Resolution** constitutes a core data integration task of *quadratic time complexity*.
-As a result, it scales to large datasets through methods that **filtering techniques**, which reduce its computational cost to *candidate pairs*.
-These are pairs of similar entity profiles that are highly likely to be matching.
-Three types of filtering methods have been proposed in the literature:
+This repository applies state-of-the-art filtering techniques for Entity Resolution (ER) to medical datasets. It is a fork of [ContinuousFilteringBenchmark](https://github.com/gpapadis/ContinuousFilteringBenchmark) by Papadakis et al. (ICDE 2023).
 
- 1) Blocking workflows
- 2) String similarity joins
- 3) Nearest neighbor methods
- 
-The goal of this repository is to provide code and data for benchmarking the relative performance of the main methods of these three types. 
+**Supervisor:** Franziska Neuhof  
+**Team:** Adam Ben Rejeb, Kapil Kumar Khatri, Melvin Vincent  
+**Institution:** Leibniz University Hannover
 
-Detailed results of our extended experimental analysis are provided [here](https://colab.research.google.com/drive/1ZfRqNr5zXZfIWyUhVeTum_E6wBbOJGfi?usp=sharing#scrollTo=8Gi_ZnaUlzor).
+## Overview
 
-*We plan to keep our benchmark **up-to-date**, including new filtering methods and datasets shortly after their publication. Please create a new issue in order to request the addition of a new dataset or filtering method.*
+Entity Resolution is the task of identifying records across one or more datasets that refer to the same real-world entity, without a shared unique key. The naive pairwise approach has quadratic complexity, so filtering techniques reduce the candidate space before verification.
 
-## Blocking Workflows
+Three families of filtering methods are benchmarked:
 
-Each blocking workflow consists of four steps:
+| Family | Approach |
+|---|---|
+| Blocking Workflows | Token/Q-gram blocks + block purging + meta-blocking (JedAI) |
+| String Similarity Joins | Inverted-index similarity join with cosine/Jaccard threshold |
+| NN Methods | Neural embedding-based candidate generation |
 
-1) Block Building, which is a mandatory step that produces a set of blocks. The following methods have been considered so far:
-    1)  Standard Blocking
-    2)  Q-Grams Blocking
-    3)  Extended Q-Grams Blocking
-    4)  Suffix Arrays Blocking
-    5)  Extended Suffix Arrays Blocking
-2) Blocking Purging, which is an *optional, parameter-free* step that discards blocks with more than half the input entities.
-3) Block Filtering, which is an *optional* step that retains every entity in r% of its smallest blocks.
-4) Comparisonn Cleaning, which is a mandatory step that applies one of the following methods:
-    1) Comparison Propagation, which simply cleans a set of overlapping blocks from all repeated candidate pairs.
-    2) Meta-blocking, which assigns a score to every candidate pairs that is proportional to its matching likelihoood and thenn discards the lowest weighted pairs. This way, it removes all repeated candidate pairs as well as a large portion of the non-matching ones. Meta-blocking consists of two parts:
-        1) A weighting scheme, the scoring function
-        2) A pruning algorithm, which cleans the candidate pairs
+## Medical Datasets
 
-In our experiments, we thoroughly fine-tune the configuration parameters of these 5 workflows. We also consider 2 baseline workflows:
-1) Parameter-free Blocking Workflow, which combines the three parameter-free methods, i.e., Standard Blocking, Block Purging and Comparison Propagation.
-2) Default Q-Grams Blocking Workflow, which combines Q-Grams Blocking with Block Filtering and Meta-blocking, using the configuration parameters determined in [a past experimental analysis](http://www.vldb.org/pvldb/vol9/p684-papadakis.pdf).
+| Dataset | Type | Source | D1 | D2 | GT | ER Task |
+|---|---|---|---|---|---|---|
+| FEBRL-1 | Synthetic patient records | Febrl Python library | 1,000 | 1,000 | 500 | Dirty ER |
+| FEBRL-2 | Synthetic patient records | Febrl Python library | 5,000 | 5,000 | 1,934 | Dirty ER |
+| FEBRL-3 | Synthetic patient records | Febrl Python library | 5,000 | 5,000 | 6,538 | Dirty ER |
+| FEBRL-4 | Synthetic patient records | Febrl Python library | 5,000 | 5,000 | 5,000 | Clean-Clean ER |
+| Synthea | Synthetic EHR patients | Synthea generator | 5,660 | 6,228 | 500 | Dirty ER |
+| MedMentions | PubMed entity mentions | MedMentions corpus | 22,248 | 22,248 | 22,248 | Clean-Clean ER |
+| CMS | Medicare physician records | CMS Open Payments | 64,177 | 64,177 | 64,177 | Clean-Clean ER |
+| UMLS | Medical ontology concepts | UMLS MRCONSO.RRF | 134,992 | 156,932 | 643,166 | Clean-Clean ER |
+| RxNorm | Drug terminology (IN vs BN) | NLM RxNorm CPC | 808 | 868 | 868 | Clean-Clean ER |
 
-All code and data are available [here](blockingWorkflows).
+## Experiment Runners
 
-## String similarity joins
+| Runner | Method | Description |
+|---|---|---|
+| `MedicalBFRunner.java` | Parameter-Free Blocking Workflow | Standard/Q-Grams + Block Purging + Comparison Propagation |
+| `MedicalBFRunnerFineTuned.java` | Parameter-Tuned Blocking Workflow | Grid search over block building, filtering, and meta-blocking |
+| `MedicalEpsilonJoinsRunner.java` | Epsilon-Join | Inverted-index similarity join with cosine/Jaccard threshold |
 
-The following state-of-the-art string similarity join algorithms are considered:
-1) ε-Join
-2) kNN-Join
+## How to Run
 
-In our experiments, we thoroughly fine-tune the configuration parameters of these five workflows. We also consider one baseline method:
-1) Default kNN-Join
+### Step 1: Prepare datasets
 
-All code and data are available [here](joins).
+```bash
+python medicalDatasets/prepare/prepare_febrl.py
+python medicalDatasets/prepare/prepare_medmentions.py
+python medicalDatasets/prepare/prepare_cms.py
+python medicalDatasets/prepare/prepare_umls.py
+python medicalDatasets/prepare/prepare_rxnorm.py
+```
 
-## Nearest neighbor methods
+### Step 2: Convert to JedAI serialized format
 
-The following state-of-the-art NN methods are considered:
+```bash
+javac -cp "blockingWorkflows/lib/*" -d out medicalDatasets/convert/MedicalDataConverter.java
+java -cp "out:blockingWorkflows/lib/*" MedicalDataConverter
+```
 
-1) MinHash LSH
-2) Crosspolytope LSH
-3) Hyperplane LSH
-4) FAISS
-5) SCANN
-6) DeepBlocker
+### Step 3: Run experiments
 
-In our experiments, we thoroughly fine-tune the configuration parameters of these 6 methods. We also consider one baseline method:
-1) Default DeepBlocker (DDB)
+```bash
+# Parameter-Free Blocking Workflow
+javac -cp "blockingWorkflows/lib/*" -d out MedicalBFRunner.java
+java -Xmx12g -cp "out:blockingWorkflows/lib/*" MedicalBFRunner
 
-All code and data are available [here](nnmethods).
+# Parameter-Tuned Blocking Workflow (grid search)
+javac -cp "blockingWorkflows/lib/*" -d out MedicalBFRunnerFineTuned.java
+java -Xmx12g -cp "out:blockingWorkflows/lib/*" MedicalBFRunnerFineTuned
 
-### Datasets
+# Run a single dataset by index (0-8):
+java -Xmx12g -cp "out:blockingWorkflows/lib/*" MedicalBFRunnerFineTuned 3
 
-For the time being, the following real-world datasets for Clean-Clean ER have been used in our experimental study:
+# Epsilon-Join
+javac -cp "joins/lib/*:blockingWorkflows/lib/*" -d out joins/src/utilities/*.java MedicalEpsilonJoinsRunner.java
+java -Xmx12g -cp "out:joins/lib/*:blockingWorkflows/lib/*" MedicalEpsilonJoinsRunner
+```
 
-| Dataset Name | D1 Entities | D2 Entities | D1 Name-Value Pairs | D2 Name-Value Pairs | Duplicates | Average NVP per Entity | Brute-force Comparisons |
-| --- | --- | --- | --- | --- | --- |--- | --- | 
-| D1 (Restaurants) | 339 | 2,256 | 1,130 | 7,519 | 89 | 3.3 | 7.64E+05 |
-| D2 (Abt-Buy) | 1,076 | 1,076 | 2,568 | 2,308 | 1,076 | 2.4 | 1.16E+06 |
-| D3 (Amazon-Google Products) | 1,354 | 3,039 | 5,302 | 9,110 | 1,104 | 3.9 | 4.11E+06 |
-| D4 (DBLP-ACM) | 2,616 | 2,294 | 10,464	| 9,162 | 2,224 | 4.0 | 6.00E+06 | 
-| D5 (IMDB-TMDB) | 5,118 | 6,056 | 21,294 | 23,761 | 1,968 | 4.0 | 3.10E+07 | 
-| D6 (IMDB-TVDB) | 5,118 | 7,810 | 21,294 | 20,902 | 1,072 | 3.2 | 4.00E+07 |
-| D7 (TMDB-TVDB) | 6,056 | 7,810 | 23,761 | 20,902 | 1,095 | 2.2 | 4.73E+07 | 
-| D8 (Amazon-Walmart) | 2,554 | 22,074 | 14,143 | 114,315 | 853 | 5.2 | 5.64E+07 | 
-| D9 (DBLP-Scholar) | 2,516 | 61,353 | 10,064 | 198,001 | 2,308 | 4.0 | 1.54E+08 | 
-| D10 (Movies) | 27,615 | 23,182 | 155,436 | 816,009 | 22,863 | 5.6 | 6.40E+08|
+## Directory Structure
 
-We have also included the following synthetic datasets for Dirty ER in the scalability analysis of our experimental study:
+```
+.
+├── MedicalBFRunner.java              # Parameter-free blocking workflow
+├── MedicalBFRunnerFineTuned.java     # Fine-tuned blocking workflow (grid search)
+├── MedicalEpsilonJoinsRunner.java    # Epsilon-join experiments
+├── medicalDatasets/
+│   ├── prepare/                      # Python scripts to prepare CSV files
+│   ├── convert/                      # Java converter: CSV -> JedAI serialized format
+│   └── README.md                     # Detailed dataset preparation instructions
+├── blockingWorkflows/                # Original blocking workflow code and data
+│   ├── lib/                          # JedAI library JARs
+│   └── data/medical/                 # Serialized medical dataset profiles
+├── joins/                            # Original joins code
+│   ├── lib/                          # Join library JARs
+│   └── src/                          # Join source code (utilities, TopK, etc.)
+└── nnMethods/                        # Neural network methods (future work)
+```
 
-| Dataset Name | Entities | Name-Value Pairs | Duplicates | Average NVP per Entity | Brute-force Comparisons |
-| --- | --- | --- | --- | --- | --- |
-| D1OK| 10,000 | 106,108 | 8,705 | 10.61 | 5.00E+07 |
-| D50K | 50,000 | 530,854 | 43,071 | 10.62 | 1.25E+09 |
-| D100K | 100,000 | 1,061,421 | 85,497 | 10.61 | 5.00E+09 |
-| D200K | 200,000 | 2,123,728 | 172,403	| 10.62 | 2.00E+10 | 
-| D300K | 300,000 | 3,184,885 | 257,034 | 10.62 | 4.50E+10 |
-| D1M | 1,000,000 | 10,617,729 | 857,538 | 10.62 | 5.00E+11 |
-| D2M | 2,000,000 | 21,238,252 | 1,716,102 | 10.62 | 2.00E+12 |
-  
-### Technical report
+## Notes
 
-More details are provided in the following technical report:
+- UMLS and RxNorm use Q-Grams blocking (q=6) instead of Standard Blocking due to short ontology terms.
+- Synthea is treated as Dirty ER using a single merged collection with injected duplicates.
+- Run with `-Xmx12g` for UMLS and CMS due to memory requirements.
+- All prepare scripts use `__file__`-based path resolution and work from any working directory.
 
-*George Papadakis, Marco Fisichella, Franziska Schoger, George Mandilaras, Nikolaus Augsten, Wolfgang Nejdl:
-How to reduce the search space of Entity Resolution: with Blocking or Nearest Neighbor search?"* ([pdf](https://arxiv.org/abs/2202.12521)).
+## Base Paper
+
+*George Papadakis, Marco Fisichella, Franziska Schoger, George Mandilaras, Nikolaus Augsten, Wolfgang Nejdl: "How to reduce the search space of Entity Resolution: with Blocking or Nearest Neighbor search?"* ([pdf](https://arxiv.org/abs/2202.12521))
+
+Original repository: [gpapadis/ContinuousFilteringBenchmark](https://github.com/gpapadis/ContinuousFilteringBenchmark)
