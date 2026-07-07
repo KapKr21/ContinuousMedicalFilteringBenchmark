@@ -42,7 +42,7 @@ public class MedicalEpsilonJoinsRunner {
     };
 
     public static void main(String[] args) throws Exception {
-        System.out.println("=== Medical Datasets — ε-Join (Schema-Agnostic) ===\n");
+        System.out.println("Medical Datasets — ε-Join (Schema-Agnostic)\n");
 
         for (Object[] ds : DATASETS) {
             String label             = (String) ds[0];
@@ -147,6 +147,6 @@ public class MedicalEpsilonJoinsRunner {
             System.out.printf("Reduction    : %.4f%n", rr);
             System.out.printf("Query time   : %,d ms%n%n", t2 - t1);
         }
-        System.out.println("=== All datasets done ===");
+        System.out.println("All datasets done");
     }
 }

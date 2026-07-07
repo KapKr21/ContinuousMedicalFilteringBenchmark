@@ -4,7 +4,6 @@ import org.scify.jedai.blockbuilding.*;
 import org.scify.jedai.blockprocessing.IBlockProcessing;
 import org.scify.jedai.blockprocessing.blockcleaning.BlockFiltering;
 import org.scify.jedai.blockprocessing.blockcleaning.ComparisonsBasedBlockPurging;
-import org.scify.jedai.blockprocessing.comparisoncleaning.ComparisonPropagation;
 import org.scify.jedai.datamodel.*;
 import org.scify.jedai.datareader.entityreader.*;
 import org.scify.jedai.datareader.groundtruthreader.*;
@@ -21,7 +20,7 @@ import org.scify.jedai.utilities.enumerations.ComparisonCleaningMethod;
  *   - Weighting: 3 configs (0, 2, 4 = ARCS, ECBS, EJS)
  *   - Block builders: reduced to 2 per dataset
  *
- * ~108 combos per dataset instead of ~1008. Should finish in 1-2 hours per dataset.
+ * ~24 combos per dataset instead of ~1008. Should finish in ~30-45 min per dataset.
  *
  * Compile:
  *   javac -cp "blockingWorkflows/lib/*" -d out MedicalBFRunnerLite.java
@@ -43,21 +42,17 @@ public class MedicalBFRunnerLite {
         {"UMLS (Clean-Clean)",       "umlsProfilesD1",        "umlsProfilesD2",        "umlsDuplicates",        "true"},
     };
 
-    // Reduced meta-blocking: drop BLAST (too slow for large datasets)
+    // Ultra-lite: only WEP and RCNP (best performers from partial CMS run)
     static final ComparisonCleaningMethod[] MB_METHODS = {
         ComparisonCleaningMethod.WEIGHTED_EDGE_PRUNING,               // WEP
-        ComparisonCleaningMethod.CARDINALITY_EDGE_PRUNING,            // CEP
         ComparisonCleaningMethod.RECIPROCAL_CARDINALITY_NODE_PRUNING, // RCNP
     };
 
-    // Reduced weighting configs: ARCS(0), ECBS(2), EJS(4)
-    static final int[] MB_CONFIGS = {0, 2, 4};
+    // Only 2 weighting configs: ARCS(0) and EJS(4) — most distinct
+    static final int[] MB_CONFIGS = {0, 4};
 
-    // Reduced Block Filtering configs: low/mid/high
-    static final int[] BF_CONFIGS = {10, 20, 30};
-
-    // Q-gram sizes
-    static final int[] QGRAM_SIZES = {4, 5, 6};
+    // Only 2 Block Filtering configs: mid and high
+    static final int[] BF_CONFIGS = {15, 25};
 
     public static void main(String[] args) {
         BasicConfigurator.configure();
@@ -71,7 +66,7 @@ public class MedicalBFRunnerLite {
         }
 
         System.out.println("Medical Datasets — LITE Parameterized Blocking Workflow Tuning");
-        System.out.println("(Reduced grid: no BLAST, 3 BF configs, 3 weighting configs)");
+        System.out.println("(Ultra-lite grid: 2 MB methods, 2 weights, 2 BF configs)");
         System.out.println();
 
         for (int dsIdx = startDs; dsIdx < endDs; dsIdx++) {
@@ -96,37 +91,13 @@ public class MedicalBFRunnerLite {
                 double bestF1 = -1;
                 String bestConfig = "";
 
-                // PHASE 1: Parameter-free baselines
-                System.out.println("Phase 1: Parameter-Free Baselines");
+                // Parameterized grid search (parameter-free baselines in MedicalBFRunner.java)
+                System.out.println("Tuned Grid Search:");
 
-                if (qgrams) {
-                    for (int q : QGRAM_SIZES) {
-                        double[] result = runParameterFree(p1, p2, gt, true, q);
-                        String cfg = String.format("Q-Grams(q=%d) + Purging + CompPropagation", q);
-                        printResult(cfg, result);
-                        if (result[2] > bestF1) { bestF1 = result[2]; bestConfig = cfg; }
-                    }
-                } else {
-                    double[] result = runParameterFree(p1, p2, gt, false, 0);
-                    String cfg = "Standard + Purging + CompPropagation";
-                    printResult(cfg, result);
-                    if (result[2] > bestF1) { bestF1 = result[2]; bestConfig = cfg; }
-
-                    for (int q : new int[]{4, 5}) {
-                        result = runParameterFree(p1, p2, gt, true, q);
-                        cfg = String.format("Q-Grams(q=%d) + Purging + CompPropagation", q);
-                        printResult(cfg, result);
-                        if (result[2] > bestF1) { bestF1 = result[2]; bestConfig = cfg; }
-                    }
-                }
-
-                // PHASE 2: Tuned (reduced grid)
-                System.out.println("\nPhase 2: Tuned (Lite Grid)");
-
-                // Block builders: reduced set
+                // Block builders: minimal set — only the best per type
                 int[][] blockBuilders;
                 if (qgrams) {
-                    blockBuilders = new int[][]{{1, 5}, {1, 6}};  // Q-Grams q=5 and q=6
+                    blockBuilders = new int[][]{{1, 6}};  // Q-Grams q=6 only
                 } else {
                     blockBuilders = new int[][]{{0, 0}, {1, 5}};  // Standard + Q-Grams q=5
                 }
@@ -221,33 +192,6 @@ public class MedicalBFRunnerLite {
         }
 
         System.out.println("Lite tuning complete.");
-    }
-
-    static double[] runParameterFree(List<EntityProfile> p1, List<EntityProfile> p2,
-                                     AbstractDuplicatePropagation gt,
-                                     boolean useQGrams, int qSize) {
-        try {
-            List<AbstractBlock> blocks;
-            if (useQGrams) {
-                blocks = new QGramsBlocking(qSize).getBlocks(p1, p2);
-            } else {
-                blocks = new StandardBlocking().getBlocks(p1, p2);
-            }
-
-            blocks = new ComparisonsBasedBlockPurging(true).refineBlocks(blocks);
-            blocks = new ComparisonPropagation().refineBlocks(blocks);
-
-            BlocksPerformance stats = new BlocksPerformance(blocks, gt);
-            stats.setStatistics();
-
-            double pc = stats.getPc();
-            double pq = stats.getPq();
-            double f1 = (pc + pq == 0) ? 0 : 2 * pc * pq / (pc + pq);
-            return new double[]{pc, pq, f1};
-        } catch (Exception e) {
-            System.out.println("  [ERROR] " + e.getMessage());
-            return new double[]{0, 0, 0};
-        }
     }
 
     static void printResult(String config, double[] result) {

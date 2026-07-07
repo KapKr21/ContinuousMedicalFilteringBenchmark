@@ -4,7 +4,6 @@ import org.scify.jedai.blockbuilding.*;
 import org.scify.jedai.blockprocessing.IBlockProcessing;
 import org.scify.jedai.blockprocessing.blockcleaning.BlockFiltering;
 import org.scify.jedai.blockprocessing.blockcleaning.ComparisonsBasedBlockPurging;
-import org.scify.jedai.blockprocessing.comparisoncleaning.ComparisonPropagation;
 import org.scify.jedai.datamodel.*;
 import org.scify.jedai.datareader.entityreader.*;
 import org.scify.jedai.datareader.groundtruthreader.*;
@@ -67,9 +66,6 @@ public class MedicalBFRunnerFineTuned {
     // Config 0 = 0.025, 5 = 0.15, 10 = 0.275, 15 = 0.40, 20 = 0.525, 25 = 0.65, 30 = 0.775, 35 = 0.90
     static final int[] BF_CONFIGS = {5, 10, 15, 20, 25, 30, 35};
 
-    // Q-gram sizes to try for Q-Gram datasets
-    static final int[] QGRAM_SIZES = {3, 4, 5, 6};
-
     public static void main(String[] args) {
         BasicConfigurator.configure();
 
@@ -108,34 +104,8 @@ public class MedicalBFRunnerFineTuned {
                 double bestF1 = -1;
                 String bestConfig = "";
 
-                // PHASE 1: Parameter-free baseline (Comparison Propagation)
-                System.out.println("── Phase 1: Parameter-Free Baseline (Block Purging + Comparison Propagation) ──");
-
-                if (qgrams) {
-                    for (int q : QGRAM_SIZES) {
-                        double[] result = runParameterFree(p1, p2, gt, true, q);
-                        String cfg = String.format("Q-Grams(q=%d) + Purging + CompPropagation", q);
-                        printResult(cfg, result);
-                        if (result[2] > bestF1) { bestF1 = result[2]; bestConfig = cfg; }
-                    }
-                } else {
-                    // Standard blocking
-                    double[] result = runParameterFree(p1, p2, gt, false, 0);
-                    String cfg = "Standard + Purging + CompPropagation";
-                    printResult(cfg, result);
-                    if (result[2] > bestF1) { bestF1 = result[2]; bestConfig = cfg; }
-
-                    // Also try Q-Grams q=4,5,6 (might help for some datasets)
-                    for (int q : new int[]{4, 5, 6}) {
-                        result = runParameterFree(p1, p2, gt, true, q);
-                        cfg = String.format("Q-Grams(q=%d) + Purging + CompPropagation", q);
-                        printResult(cfg, result);
-                        if (result[2] > bestF1) { bestF1 = result[2]; bestConfig = cfg; }
-                    }
-                }
-
-                // PHASE 2: Block Filtering + Meta-Blocking (parameterized)
-                System.out.println("\nPhase 2: Tuned (Block Purging + Block Filtering + Meta-Blocking)");
+                // Parameterized grid search (parameter-free baselines in MedicalBFRunner.java)
+                System.out.println("Tuned (Block Purging + Block Filtering + Meta-Blocking)");
 
                 // Determine which block builders to try
                 int[][] blockBuilders; // {useQGrams(0/1), qgramSize}
@@ -237,37 +207,6 @@ public class MedicalBFRunnerFineTuned {
         }
 
         System.out.println("\nTuning complete");
-    }
-
-    /**
-     * Run the parameter-free workflow: Block Building → Block Purging → Comparison Propagation
-     * Returns: [PC, PQ, F1]
-     */
-    static double[] runParameterFree(List<EntityProfile> p1, List<EntityProfile> p2,
-                                     AbstractDuplicatePropagation gt,
-                                     boolean useQGrams, int qSize) {
-        try {
-            List<AbstractBlock> blocks;
-            if (useQGrams) {
-                blocks = new QGramsBlocking(qSize).getBlocks(p1, p2);
-            } else {
-                blocks = new StandardBlocking().getBlocks(p1, p2);
-            }
-
-            blocks = new ComparisonsBasedBlockPurging(true).refineBlocks(blocks);
-            blocks = new ComparisonPropagation().refineBlocks(blocks);
-
-            BlocksPerformance stats = new BlocksPerformance(blocks, gt);
-            stats.setStatistics();
-
-            double pc = stats.getPc();
-            double pq = stats.getPq();
-            double f1 = (pc + pq == 0) ? 0 : 2 * pc * pq / (pc + pq);
-            return new double[]{pc, pq, f1};
-        } catch (Exception e) {
-            System.out.println("  [ERROR] " + e.getMessage());
-            return new double[]{0, 0, 0};
-        }
     }
 
     static void printResult(String config, double[] result) {
