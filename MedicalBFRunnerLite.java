@@ -42,17 +42,18 @@ public class MedicalBFRunnerLite {
         {"UMLS (Clean-Clean)",       "umlsProfilesD1",        "umlsProfilesD2",        "umlsDuplicates",        "true"},
     };
 
-    // Ultra-lite: only WEP and RCNP (best performers from partial CMS run)
+    // Mid: WEP, CEP, and RCNP (drop BLAST)
     static final ComparisonCleaningMethod[] MB_METHODS = {
         ComparisonCleaningMethod.WEIGHTED_EDGE_PRUNING,               // WEP
+        ComparisonCleaningMethod.CARDINALITY_EDGE_PRUNING,            // CEP
         ComparisonCleaningMethod.RECIPROCAL_CARDINALITY_NODE_PRUNING, // RCNP
     };
 
-    // Only 2 weighting configs: ARCS(0) and EJS(4) — most distinct
-    static final int[] MB_CONFIGS = {0, 4};
+    // 3 weighting configs: ARCS(0), ECBS(2), EJS(4)
+    static final int[] MB_CONFIGS = {0, 2, 4};
 
-    // Only 2 Block Filtering configs: mid and high
-    static final int[] BF_CONFIGS = {15, 25};
+    // 3 Block Filtering configs: low/mid/high
+    static final int[] BF_CONFIGS = {10, 20, 30};
 
     public static void main(String[] args) {
         BasicConfigurator.configure();
@@ -66,7 +67,7 @@ public class MedicalBFRunnerLite {
         }
 
         System.out.println("Medical Datasets — LITE Parameterized Blocking Workflow Tuning");
-        System.out.println("(Ultra-lite grid: 2 MB methods, 2 weights, 2 BF configs)");
+        System.out.println("(Mid grid: 3 MB methods, 3 weights, 3 BF configs)");
         System.out.println();
 
         for (int dsIdx = startDs; dsIdx < endDs; dsIdx++) {
@@ -97,7 +98,7 @@ public class MedicalBFRunnerLite {
                 // Block builders: minimal set — only the best per type
                 int[][] blockBuilders;
                 if (qgrams) {
-                    blockBuilders = new int[][]{{1, 6}};  // Q-Grams q=6 only
+                    blockBuilders = new int[][]{{1, 5}, {1, 6}};  // Q-Grams q=5 and q=6
                 } else {
                     blockBuilders = new int[][]{{0, 0}, {1, 5}};  // Standard + Q-Grams q=5
                 }
