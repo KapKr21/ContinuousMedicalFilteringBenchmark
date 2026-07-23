@@ -1,0 +1,29 @@
+# Requirements for NN methods (FAISS, ScaNN, DeepBlocker)
+# Install in a virtual environment on Pascal:
+#   python3 -m venv ~/nnenv
+#   source ~/nnenv/bin/activate
+#   pip install -r nnmethods/medical/requirements.txt
+
+# Core dependencies
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+psutil>=5.9.0
+
+# Sentence embeddings (for prepare_medical_nn_data.py)
+sentence-transformers>=2.2.0
+torch>=2.0.0
+
+# FAISS (CPU version — use faiss-gpu if Pascal has CUDA)
+faiss-cpu>=1.7.4
+
+# ScaNN (Google's approximate NN library)
+scann>=1.3.0
+
+# DeepBlocker dependencies (install separately via git clone)
+# git clone https://github.com/qcri/DeepBlocker.git ~/DeepBlocker
+# cd ~/DeepBlocker && pip install -e .
+# DeepBlocker also needs: torch, scikit-learn (already listed above)
+
+# For FEBRL dataset preparation
+recordlinkage>=0.16
