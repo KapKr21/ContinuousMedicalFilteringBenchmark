@@ -14,11 +14,11 @@ import org.scify.jedai.utilities.datastructures.*;
  * Uses Standard Blocking for most datasets, Q-Grams for UMLS (ontology data).
  *
  * Compile & run from repo root:
- *   javac -cp "blockingWorkflows/lib/*" -d out MedicalBFRunner.java
- *   java  -cp "out:blockingWorkflows/lib/*" MedicalBFRunner
+ *   javac -cp "blockingWorkflows/lib/*" -d out MedicalBFParameterFreeRunner.java
+ *   java  -cp "out:blockingWorkflows/lib/*" MedicalBFParameterFreeRunner
  */
 
-public class MedicalBFRunner {
+public class MedicalBFParameterFreeRunner {
 
     static final String DIR = "blockingWorkflows/data/medical/";
     static final int QGRAM_SIZE = 6;   // q=6 for UMLS/RxNorm: reduces block sizes dramatically

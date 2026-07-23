@@ -23,16 +23,16 @@ import org.scify.jedai.utilities.enumerations.ComparisonCleaningMethod;
  * ~24 combos per dataset instead of ~1008. Should finish in ~30-45 min per dataset.
  *
  * Compile:
- *   javac -cp "blockingWorkflows/lib/*" -d out MedicalBFRunnerLite.java
+ *   javac -cp "blockingWorkflows/lib/*" -d out MedicalBFRunnerFineTunedLite.java
  *
  * Run both:
- *   java -Xmx6g -cp "out:blockingWorkflows/lib/*" MedicalBFRunnerLite
+ *   java -Xmx6g -cp "out:blockingWorkflows/lib/*" MedicalBFRunnerFineTunedLite
  *
  * Run only CMS (index 0) or UMLS (index 1):
- *   java -Xmx6g -cp "out:blockingWorkflows/lib/*" MedicalBFRunnerLite 0
- *   java -Xmx6g -cp "out:blockingWorkflows/lib/*" MedicalBFRunnerLite 1
+ *   java -Xmx6g -cp "out:blockingWorkflows/lib/*" MedicalBFRunnerFineTunedLite 0
+ *   java -Xmx6g -cp "out:blockingWorkflows/lib/*" MedicalBFRunnerFineTunedLite 1
  */
-public class MedicalBFRunnerLite {
+public class MedicalBFRunnerFineTunedLite {
 
     static final String DIR = "blockingWorkflows/data/medical/";
 
