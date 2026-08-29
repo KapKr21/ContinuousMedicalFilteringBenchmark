@@ -136,8 +136,9 @@ python run_deepblocker_medical.py
 
 ```
 .
-├── MedicalBFRunner.java                # Parameter-free blocking workflow
+├── MedicalBFParameterFreeRunner.java   # Parameter-free blocking workflow
 ├── MedicalBFRunnerFineTuned.java       # Fine-tuned blocking workflow (grid search)
+├── MedicalBFRunnerFineTunedLite.java   # Fine-tuned blocking workflow (lite grid search)
 ├── MedicalEpsilonJoinsRunner.java      # Epsilon-join experiments
 ├── latex/                              # Paper LaTeX source and PDF
 │   ├── paper.tex                       # Main LaTeX source
@@ -171,8 +172,6 @@ python run_deepblocker_medical.py
 │   ├── faiss/                          # FAISS implementation
 │   ├── scann/                          # ScaNN implementation
 │   └── deepblocker/                    # DeepBlocker implementation
-├── cleanup.sh                          # Automated cleanup script
-├── verify_repo.sh                      # Repository verification script
 └── README.md                           # This file
 ```
 
