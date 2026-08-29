@@ -36,7 +36,7 @@ Three families of filtering methods are benchmarked:
 | FEBRL-2 | Synthetic patient records | Febrl Python library | 5,000 | 5,000 | 1,934 | Dirty ER |
 | FEBRL-3 | Synthetic patient records | Febrl Python library | 5,000 | 5,000 | 6,538 | Dirty ER |
 | FEBRL-4 | Synthetic patient records | Febrl Python library | 5,000 | 5,000 | 5,000 | Clean-Clean ER |
-| Synthea | Synthetic EHR patients | Synthea generator | 5,660 | 6,228 | 500 | Dirty ER |
+| Synthea | Synthetic EHR patients | Synthea generator | 5,660 | 6,228 | 500 | Clean-Clean ER |
 | MedMentions | PubMed entity mentions | MedMentions corpus | 22,248 | 22,248 | 22,248 | Clean-Clean ER |
 | CMS | Medicare physician records | CMS Open Payments | 64,177 | 64,177 | 64,177 | Clean-Clean ER |
 | UMLS | Medical ontology concepts | UMLS MRCONSO.RRF | 134,992 | 156,932 | 643,166 | Clean-Clean ER |
