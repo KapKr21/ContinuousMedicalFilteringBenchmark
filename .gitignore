@@ -41,3 +41,15 @@ nnmethods/data/
 
 # Results
 results/
+
+# LaTeX auxiliary files
+latex/*.aux
+latex/*.bbl
+latex/*.blg
+latex/*.out
+latex/*.synctex.gz
+latex/*.fdb_latexmk
+latex/*.fls
+latex/*.toc
+latex/*.lof
+latex/*.lot
