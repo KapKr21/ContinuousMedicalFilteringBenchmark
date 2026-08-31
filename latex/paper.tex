@@ -24,7 +24,6 @@
 \usepackage{amsmath}
 \usepackage{tikz}
 \usetikzlibrary{positioning, shapes, arrows.meta}
-\newcommand{\FN}[1]{\textcolor{orange}{[FN: #1]}}
 
 \begin{document}
 
@@ -51,7 +50,6 @@ Vincent Melvin\inst{}}
 \institute{Gottfried Wilhelm Leibniz Universität Hannover, Welfengarten 1, 30167 Hannover \email{\{adam.ben.rejeb, kapil.kumar.khatri, melvin.vincent\}@stud.uni-hannover.de}}
 
 \maketitle              % typeset the header of the contribution
-
 \begin{abstract}
 
 Entity Resolution (ER) in medical data is complicated by domain-specific terminology,
@@ -299,8 +297,7 @@ PQ = \frac{|C \cap GT|}{|C|}, \qquad
 F_1 = \frac{2 \cdot PC \cdot PQ}{PC + PQ}
 \end{equation}
 where $PC$ (Pair Completeness) is recall over the ground truth, $PQ$ (Pair Quality) is
-precision over the candidate set, and $F_1$ their harmonic mean. We additionally report
-wall-clock run time.
+precision over the candidate set, and $F_1$ their harmonic mean.
 
 \subsection{Blocking Workflows}
 \label{sec:methodology-blocking}
@@ -558,9 +555,7 @@ still only 0.375 at $k=100$, so a larger candidate set does not recover the miss
 Two independently implemented indices saturating at nearly the same recall points to the
 embedding geometry rather than either index: CMS profiles are short physician-name strings
 whose sentence embeddings cluster too tightly for the HNSW proximity graph or ScaNN's
-anisotropic partitioning to separate locally. The choice of index is therefore not orthogonal
-to effectiveness on medical data, and the penalty falls on the largest collection, where
-approximate retrieval is also the only affordable option (Table~\ref{tab:efficiency}).
+anisotropic partitioning to separate locally. The choice of index is therefore not orthogonal to effectiveness on medical data, and the penalty falls on CMS, the dataset where the approximate variants are otherwise most attractive.
 
 \begin{table}[!ht]
 \centering
@@ -701,8 +696,7 @@ Confirming the domain-vocabulary hypothesis would require a domain-specific embe
 \textbf{UMLS is hard for every method.} The best result is kNN-Join's $F_1=0.531$ on the 50\%
 subset; on the full collections nothing exceeds 0.415. UMLS compounds three difficulties from
 Section~\ref{sec:datasets}: scale ($134{,}992 \times 156{,}932$), many-to-many concept mapping
-(643{,}166 pairs), and short synonym-dense strings. It is also the only dataset where run time
-becomes a bottleneck in its own right (Table~\ref{tab:efficiency}). We regard UMLS-scale
+(643{,}166 pairs), and short synonym-dense strings. We regard UMLS-scale
 ontology matching as future work rather than a case general-purpose filtering can be expected
 to solve.
 
@@ -755,13 +749,16 @@ general-purpose datasets.
 % , - Bibliography , -
 %
 \bibliographystyle{splncs04}
-\begin{thebibliography}{20}
+\begin{thebibliography}{21}
 
 \bibitem{papadakis2023benchmarking}
 Papadakis, G., Fisichella, M., Schoger, F., Mandilaras, G., Augsten, N., Nejdl, W.: Benchmarking filtering techniques for entity resolution. In: Proceedings of the 39th IEEE International Conference on Data Engineering (ICDE), pp.~653--666 (2023)
 
 \bibitem{neuhof2024open}
 Neuhof, F., Fisichella, M., Papadakis, G., Nikoletos, K., Augsten, N., Nejdl, W., Koubarakis, M.: Open benchmark for filtering techniques in entity resolution. The VLDB Journal \textbf{33}(5), 1671--1696 (2024)
+
+\bibitem{christen2012datamatching}
+Christen, P.: Data Matching: Concepts and Techniques for Record Linkage, Entity Resolution, and Duplicate Detection. Springer (2012)
 
 \bibitem{papadakis2021survey}
 Papadakis, G., Skoutas, D., Thanos, E., Palpanas, T.: Blocking and filtering techniques for entity resolution: a survey. ACM Computing Surveys \textbf{53}(2), 31:1--31:42 (2021)
